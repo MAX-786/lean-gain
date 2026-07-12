@@ -135,7 +135,7 @@ export function OnboardingWizard({ defaultName }: { defaultName?: string }) {
           <>
             <StepTitle title="What should we call you?" sub="Your plan is private to your account." />
             <Field label="Name">
-              <Input value={f.name} onChange={(e) => set("name", e.target.value)} placeholder="Mudit" autoFocus />
+              <Input value={f.name} onChange={(e) => set("name", e.target.value)} placeholder="Your Name" autoFocus />
             </Field>
           </>
         )}

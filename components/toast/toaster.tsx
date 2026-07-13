@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { useRouter } from "next/navigation";
+import { useQueryClient } from "@tanstack/react-query";
 import { Check, Undo2, X } from "lucide-react";
 import { undoEvent } from "@/actions/activity";
 
@@ -20,7 +20,7 @@ export const useToast = () => React.useContext(ToastCtx);
 export function ToastProvider({ children }: { children: React.ReactNode }) {
   const [toasts, setToasts] = React.useState<ToastItem[]>([]);
   const idRef = React.useRef(0);
-  const router = useRouter();
+  const qc = useQueryClient();
 
   const dismiss = React.useCallback((id: number) => {
     setToasts((ts) => ts.filter((t) => t.id !== id));
@@ -39,7 +39,8 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
     dismiss(t.id);
     if (!t.undoEventId) return;
     const res = await undoEvent(t.undoEventId);
-    router.refresh();
+    // Undo can touch any domain — refresh everything from the server.
+    qc.invalidateQueries();
     if (res.ok) toast({ message: "Undone" });
   }
 

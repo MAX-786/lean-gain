@@ -1,14 +1,14 @@
 "use client";
 
 import * as React from "react";
-import { useRouter } from "next/navigation";
+import { useQueryClient } from "@tanstack/react-query";
 import { Pencil, Check, X } from "lucide-react";
 import { useToast } from "@/components/toast/toaster";
 import { updateName } from "@/actions/profile";
 import { Input } from "@/components/ui/input";
 
 export function NameEditor({ name, email }: { name: string; email: string }) {
-  const router = useRouter();
+  const qc = useQueryClient();
   const { toast } = useToast();
   const [editing, setEditing] = React.useState(false);
   const [value, setValue] = React.useState(name);
@@ -20,7 +20,9 @@ export function NameEditor({ name, email }: { name: string; email: string }) {
     if (!value.trim()) return;
     setBusy(true);
     const res = await updateName(value.trim());
-    router.refresh();
+    qc.invalidateQueries({ queryKey: ["profile"] });
+    qc.invalidateQueries({ queryKey: ["today"] });
+    qc.invalidateQueries({ queryKey: ["activity"] });
     setBusy(false);
     setEditing(false);
     toast({ message: res.summary, undoEventId: res.eventId });

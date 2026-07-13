@@ -15,6 +15,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { logWeight, deleteWeight } from "@/actions/trackers";
 import { useToast } from "@/components/toast/toaster";
+import { useQueryClient } from "@tanstack/react-query";
 
 export interface WeightPoint {
   date: string;
@@ -40,6 +41,11 @@ export function WeightTracker({
   const [mounted, setMounted] = React.useState(false);
   const [, startTransition] = React.useTransition();
   const { toast } = useToast();
+  const qc = useQueryClient();
+  const refresh = () => {
+    qc.invalidateQueries({ queryKey: ["progress"] });
+    qc.invalidateQueries({ queryKey: ["activity"] });
+  };
   React.useEffect(() => setMounted(true), []);
 
   const fp = JSON.stringify(initial);
@@ -65,6 +71,7 @@ export function WeightTracker({
     startTransition(async () => {
       try {
         const res = await logWeight({ date, kg: val });
+        refresh();
         toast({ message: res.summary, undoEventId: res.eventId });
       } catch {}
     });
@@ -75,6 +82,7 @@ export function WeightTracker({
     startTransition(async () => {
       try {
         const res = await deleteWeight({ date: d });
+        refresh();
         toast({ message: res.summary, undoEventId: res.eventId });
       } catch {}
     });

@@ -15,7 +15,13 @@ export default async function OnboardingPage() {
     .eq("id", user.id)
     .maybeSingle();
 
-  if (profile?.onboarding_complete) redirect("/today");
+  if (profile?.onboarding_complete) {
+    // Self-heal users onboarded before the metadata flag existed.
+    if (user.user_metadata?.onboarding_complete !== true) {
+      await supabase.auth.updateUser({ data: { onboarding_complete: true } });
+    }
+    redirect("/today");
+  }
 
   return <OnboardingWizard defaultName={profile?.name ?? ""} />;
 }

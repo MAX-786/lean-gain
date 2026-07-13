@@ -1,23 +1,19 @@
-import { createClient } from "@/lib/supabase/server";
+"use client";
+
+import { useQuery } from "@tanstack/react-query";
+import { fetchRecipes, qk } from "@/lib/queries";
 import { ScreenHeader } from "@/components/screen-header";
-import { RecipesClient, type Recipe } from "@/components/recipes/recipes-client";
+import { ScreenSkeleton } from "@/components/screen-skeleton";
+import { RecipesClient } from "@/components/recipes/recipes-client";
 
-export const dynamic = "force-dynamic";
-
-export default async function RecipesPage() {
-  const supabase = await createClient();
-  const { data } = await supabase
-    .from("recipes")
-    .select("id, name, category, kcal, protein, prep_min, ingredients, steps")
-    .order("category")
-    .order("name");
-
-  const recipes = (data ?? []) as Recipe[];
+export default function RecipesPage() {
+  // Recipes are shared + immutable → cache aggressively.
+  const { data } = useQuery({ queryKey: qk.recipes, queryFn: fetchRecipes, staleTime: 1000 * 60 * 60 });
 
   return (
     <>
-      <ScreenHeader title="Recipes" sub={`${recipes.length} easy high-calorie meals`} />
-      <RecipesClient recipes={recipes} />
+      <ScreenHeader title="Recipes" sub={data ? `${data.length} easy high-calorie meals` : " "} />
+      {data ? <RecipesClient recipes={data} /> : <ScreenSkeleton />}
     </>
   );
 }

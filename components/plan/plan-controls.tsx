@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { useRouter } from "next/navigation";
+import { useQueryClient } from "@tanstack/react-query";
 import { CalendarClock, RotateCcw } from "lucide-react";
 import { useToast } from "@/components/toast/toaster";
 import { setCurrentDay, restartPlan } from "@/actions/plan";
@@ -13,17 +13,23 @@ function localToday() {
 }
 
 export function PlanControls({ currentDay }: { currentDay: number }) {
-  const router = useRouter();
+  const qc = useQueryClient();
   const { toast } = useToast();
   const [day, setDay] = React.useState(currentDay);
   const [busy, setBusy] = React.useState(false);
 
   React.useEffect(() => setDay(currentDay), [currentDay]);
 
+  function refreshPlan() {
+    qc.invalidateQueries({ queryKey: ["plan"] });
+    qc.invalidateQueries({ queryKey: ["today"] });
+    qc.invalidateQueries({ queryKey: ["activity"] });
+  }
+
   async function apply(n: number) {
     setBusy(true);
     const res = await setCurrentDay(n, localToday());
-    router.refresh();
+    refreshPlan();
     setBusy(false);
     toast({ message: res.summary, undoEventId: res.eventId });
   }
@@ -31,7 +37,7 @@ export function PlanControls({ currentDay }: { currentDay: number }) {
   async function restart() {
     setBusy(true);
     const res = await restartPlan(localToday());
-    router.refresh();
+    refreshPlan();
     setBusy(false);
     toast({ message: res.summary, undoEventId: res.eventId });
   }

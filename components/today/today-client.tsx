@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { Droplet, RotateCcw, Check, XCircle, AlertTriangle } from "lucide-react";
 import { clamp } from "@/lib/utils";
 import { FuelHeader } from "@/components/today/fuel-header";
@@ -70,6 +71,7 @@ export function TodayClient({ data }: { data: TodayData }) {
   const [snoozeFor, setSnoozeFor] = React.useState<TodayMeal | null>(null);
   const [, startTransition] = React.useTransition();
   const { toast } = useToast();
+  const qc = useQueryClient();
 
   // Re-sync from the server whenever it reports a different state (e.g. after a
   // toaster-undo revalidates this route). Fingerprint keeps optimistic updates stable.
@@ -125,6 +127,9 @@ export function TodayClient({ data }: { data: TodayData }) {
     startTransition(async () => {
       try {
         const res = await action;
+        // Background refresh so streak/rings + history stay accurate.
+        qc.invalidateQueries({ queryKey: ["today"] });
+        qc.invalidateQueries({ queryKey: ["activity"] });
         toast({ message: res.summary, undoEventId: res.eventId });
       } catch {}
     });

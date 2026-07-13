@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { Check } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toggleGrocery } from "@/actions/trackers";
@@ -30,6 +31,7 @@ export function GroceryLedger({
   const [active, setActive] = React.useState(weeks[0]?.week ?? 1);
   const [checks, setChecks] = React.useState(initialChecks);
   const [, startTransition] = React.useTransition();
+  const qc = useQueryClient();
 
   const fp = JSON.stringify(initialChecks);
   React.useEffect(() => {
@@ -47,6 +49,7 @@ export function GroceryLedger({
     startTransition(async () => {
       try {
         await toggleGrocery({ week, itemKey: item.key, checked: next, itemName: item.item });
+        qc.invalidateQueries({ queryKey: ["activity"] });
       } catch {}
     });
   }

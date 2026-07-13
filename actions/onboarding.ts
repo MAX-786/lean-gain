@@ -53,6 +53,9 @@ export async function saveOnboarding(raw: unknown, startDate: string, timezone?:
   });
   if (pErr) throw new Error(`profile: ${pErr.message}`);
 
+  // Flag in user_metadata so middleware gating needs no DB round-trip.
+  await supabase.auth.updateUser({ data: { onboarding_complete: true } });
+
   // 2) targets (mark previous not-current, insert fresh)
   await supabase
     .from("user_targets")

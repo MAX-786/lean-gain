@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { useRouter } from "next/navigation";
+import { useQueryClient } from "@tanstack/react-query";
 import {
   Check,
   Clock,
@@ -54,14 +54,14 @@ function fmtWhen(iso: string) {
 }
 
 export function ActivityList({ events }: { events: ActivityEvent[] }) {
-  const router = useRouter();
+  const qc = useQueryClient();
   const { toast } = useToast();
   const [busy, setBusy] = React.useState<string | null>(null);
 
   async function undo(id: string) {
     setBusy(id);
     const res = await undoEvent(id);
-    router.refresh();
+    qc.invalidateQueries();
     setBusy(null);
     if (res.ok) toast({ message: "Undone" });
   }
